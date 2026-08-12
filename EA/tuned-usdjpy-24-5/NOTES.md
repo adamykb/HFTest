@@ -56,3 +56,18 @@ types later.
 4. Optimize only within `Delta`/`MaxDistance`/`Stop`/`MaxTrailing`/`TslTriggerPoints`/
    `TslPoints` in the Strategy Tester, then validate out-of-sample (a different date
    range than you optimized on) — this style of EA curve-fits easily to one window.
+
+## Recommended Strategy Tester settings
+
+- **Symbol Period: M1.** The EA is tick-driven (`OnTick`), so this doesn't change
+  how often it trades — but it does control what `PERIOD_CURRENT` resolves to for
+  `TrailType=2/3/4` (previous-candle / fast-MA / Ichimoku trailing), and matches the
+  `Secs=60` input, whose own comment ("Should be same as TF") implies M1 was the
+  timeframe the EA was designed around. `TrailType=1` (Scalp_Trail, our default) is
+  purely point-based and unaffected by this setting either way. Movement character
+  genuinely differs by timeframe — an M1 candle reflects only the last minute,
+  while M5/M15 smooths and lags behind it — so M1 keeps trailing reference values
+  close to current price for a strategy meant to react fast.
+- **Tick model: "Every tick based on real ticks."** This is a separate setting from
+  Symbol Period — selecting M1 alone does not give tick-level fill fidelity, you
+  need both set correctly.
