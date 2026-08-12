@@ -29,17 +29,15 @@ rather than trading hours.
 
 ## Data windows (walk-forward — do not skip the out-of-sample step)
 
-| Window | Dates | Purpose |
+| Window | Dates | Status |
 |---|---|---|
-| **In-sample (optimize here)** | 2026.05.25 – 2026.07.04 | Run the optimizer on this range only |
-| **Out-of-sample #1** | 2026.07.05 – 2026.07.11 | Same week as the baseline above — direct comparison against PF 0.90 |
-| **Out-of-sample #2** | 2026.07.12 – 2026.07.19 | Fully unseen week, confirms #1 wasn't luck |
+| Originally-planned in-sample | 2026.05.25 – 2026.07.04 | Not used — the sweep ended up running on the window below instead |
+| **Sweep window (used for everything so far)** | 2026.07.05 – 2026.07.11 | Baseline through Round 2 all run here — see the correction below |
+| **Out-of-sample (the only remaining clean holdout)** | 2026.07.12 – 2026.07.19 | Untouched — reserve this for the final check, run once |
 
-A parameter set only counts as "fixed" if it clears the bar (below) on **both**
-out-of-sample windows independently — not just on average, and never on the
-in-sample window alone. If your broker's history doesn't reach back to
-2026.05.25, shift the whole three-window block back in time but keep the same
-relative structure and lengths.
+A parameter set only counts as validated once it clears the acceptance bar
+(below) on the 2026.07.12–07.19 holdout — not on the sweep window itself,
+which has now been tuned against directly (see the correction further down).
 
 ## Strategy Tester settings
 
@@ -57,7 +55,19 @@ relative structure and lengths.
   combinations, small enough for exhaustive coverage rather than the genetic
   approximation
 
-## Results logged so far (in-sample window, 2026.07.05–07.11)
+## ⚠ Data window correction
+
+Every run logged below (baseline through Round 1) was actually run on
+**2026.07.05–07.11**, not the intended in-sample window (2026.05.25–07.04).
+That date range was originally marked "Out-of-sample #1" — a reserved
+validation week. It no longer serves that purpose, since the sweep has now
+been tuned against it directly. **2026.07.12–07.19 (Out-of-sample #2) is the
+only untouched week left** — treat it as the single true holdout: run it once
+on whatever final parameter set the sweep converges on, and don't iterate
+against it. If that result looks bad, that's the answer, not a cue to keep
+adjusting and re-testing on that same week.
+
+## Results logged so far (window: 2026.07.05–07.11 — see correction above)
 
 Running a full 140-combination grid by hand isn't practical, so this plan now
 runs as a **manual local sensitivity sweep** instead (next section) — a small,
@@ -66,43 +76,55 @@ than the full grid. The full grid is kept further below as an alternative,
 only worth it if MT5's Optimizer can run all combinations unattended on your
 machine.
 
-| Run | Delta | Stop | TslPoints | Trades | Win rate | Breakeven win rate | Profit Factor | Net P&L |
-|---|---|---|---|---|---|---|---|---|
-| Baseline | 0.5 | 10 | 10 | 9,281 | 37.2% | 39.7% | 0.90 | -$43.61 |
-| Run A | 1.0 | 15 | 15 | 6,678 | 43.7% | 45.4% | 0.94 | -$24.94 |
-| **Run B (best so far)** | **1.5** | **25** | **20** | 4,199 | 43.9% | 45.3% | **0.95** | -$15.34 |
+| Run | Delta | Stop | TslPoints | Trades | Win rate | Profit Factor | Net P&L |
+|---|---|---|---|---|---|---|---|
+| Baseline | 0.5 | 10 | 10 | 9,281 | 37.2% | 0.902 | -$43.61 |
+| Run A | 1.0 | 15 | 15 | 6,678 | 43.7% | 0.936 | -$24.94 |
+| Round 1 #2 | 1.5 | 15 | 20 | 5,505 | 38.0% | 0.933 | -$23.02 |
+| Round 1 #4 | 1.5 | 25 | 15 | 5,092 | 49.1% | 0.940 | -$19.79 |
+| Round 1 #6 | 1.0 | 25 | 20 | 4,180 | 44.2% | 0.946 | -$16.14 |
+| Run B | 1.5 | 25 | 20 | 4,199 | 43.9% | 0.949 | -$15.34 |
+| Round 1 #1 | 1.5 | 35 | 20 | 3,285 | 47.8% | 0.951 | -$12.48 |
+| Round 1 #3 | 1.5 | 25 | 25 | 3,357 | 41.1% | 0.957 | -$11.40 |
+| **Round 1 #5 (best so far)** | **2.0** | **25** | **20** | 4,176 | 44.1% | **0.959** | -$12.11 |
 
-Trend across these three: widening all three together has moved Profit Factor
-and net P&L in the right direction every time, but hasn't crossed 1.0 yet.
-Because Runs A and B moved all three parameters together, we don't yet know
-which one is actually driving the improvement — that's what the sweep below
-is for.
+**Per-axis read** (isolating each parameter, holding the other two at
+Delta=1.5/Stop=25/TslPoints=20):
 
-## Manual local sensitivity sweep (6 runs — do this instead of the full grid)
+- **Stop** (15→25→35): PF 0.933 → 0.949 → 0.951 — climbing, but gains are
+  shrinking fast (+0.016, then +0.003). Looks like it's flattening out around
+  25-35; probably not worth pushing much further.
+- **TslPoints** (15→20→25): PF 0.940 → 0.949 → 0.957 — still climbing at a
+  steady rate, no sign of flattening yet.
+- **Delta** (1.0→1.5→2.0): PF 0.946 → 0.949 → 0.959 — still climbing, and the
+  1.5→2.0 jump was bigger than 1.0→1.5, so no flattening yet either. Trade
+  count stayed roughly flat (~4,180-4,200) across all three Delta values,
+  unlike Stop/TslPoints which both cost trade count as they widen — the
+  cheapest lever to widen so far.
 
-Each row below changes **exactly one** input away from Run B (the best point
-so far), holding the other two fixed. That isolates each parameter's
-individual effect on Profit Factor, something Runs A and B couldn't show
-since both moved all three at once. Same Strategy Tester settings as before
-(USDJPY, M1, Every tick based on real ticks, $100 deposit, in-sample window
-2026.05.25–07.04), non-optimized single tests — no Optimizer tab needed.
+Still below both targets (PF > 1.0, let alone the 1.15 in-sample bar) even at
+the best point found.
 
-| # | Delta | Stop | TslPoints | Isolates |
+## Round 2 (3 runs) — push what's still climbing
+
+Stop looks close to its ceiling, so hold it at 25 and push the two directions
+that haven't flattened yet, plus test whether they combine well together
+(individual gains from two axes don't always stack):
+
+| # | Delta | Stop | TslPoints | Why |
 |---|---|---|---|---|
-| 1 | 1.5 | **35** | 20 | Does pushing Stop further keep helping? |
-| 2 | 1.5 | **15** | 20 | Confirms Stop=25 beats pulling back |
-| 3 | 1.5 | 25 | **25** | Does pushing TslPoints further keep helping? |
-| 4 | 1.5 | 25 | **15** | Confirms TslPoints=20 beats pulling back |
-| 5 | **2.0** | 25 | 20 | Does pushing Delta further keep helping? |
-| 6 | **1.0** | 25 | 20 | Confirms Delta=1.5 beats pulling back |
+| 7 | 2.5 | 25 | 20 | Does Delta keep climbing past 2.0? |
+| 8 | 1.5 | 25 | 30 | Does TslPoints keep climbing past 25? (beyond the original planned range — worth it since the trend hasn't flattened) |
+| 9 | 2.0 | 25 | 25 | Combine the two winning moves together |
 
-**After these 6 come back**: for each parameter, if the "push further" run
-improved Profit Factor over Run B, that direction gets 1-2 more follow-up
-runs pushing further still (adaptive hill-climbing, converging toward a local
-peak in a couple more rounds). If a "push further" run made things worse,
-that parameter is likely near its local optimum already — stop pushing it.
-This should converge in roughly 2-3 more rounds of a handful of runs each,
-well short of 140 total.
+Same Strategy Tester settings as before (USDJPY, M1, Every tick based on real
+ticks, $100 deposit) — run these on **2026.07.05–07.11** for consistency with
+everything logged above, not the out-of-sample week.
+
+If Round 2 doesn't decisively cross Profit Factor 1.0, that's a real signal
+this parameter family may be topping out below breakeven — next options at
+that point would be Phase 2 (`MaxDistance`/`MaxTrailing`/`TslTriggerPoints`)
+or revisiting the hour-of-day pattern noticed earlier and set aside.
 
 ## A note on the Inputs tab labels
 
@@ -165,13 +187,16 @@ single pass.)*
 
 ## Acceptance criteria — a result only counts if ALL of these hold
 
-1. **Profit Factor > 1.15** in-sample (extra margin above 1.0, since live spread/
-   slippage will be worse than backtest and eats into any edge).
-2. **Profit Factor > 1.0 on both out-of-sample windows independently.**
-3. **Trade count ≥ 500** in each window. A parameter set that "wins" mainly by
-   barely trading (e.g. `Delta=2.5` producing 40 trades total) is not a real
-   result — it's too small a sample to trust, discard it even if PF looks great.
-4. **Max relative drawdown < 10%** in every window.
+1. **Profit Factor > 1.15** on the sweep window (2026.07.05–07.11) — extra
+   margin above 1.0, since live spread/slippage will be worse than backtest
+   and eats into any edge.
+2. **Profit Factor > 1.0 on the 2026.07.12–07.19 holdout**, run once, not
+   iterated on.
+3. **Trade count ≥ 500** in both windows. A parameter set that "wins" mainly
+   by barely trading (e.g. `Delta=2.5` producing 40 trades total) is not a
+   real result — it's too small a sample to trust, discard it even if PF
+   looks great.
+4. **Max relative drawdown < 10%** in both windows.
 5. Win rate and average-win/average-loss ratio should both be reported, not just
    PF — two very different parameter sets can produce the same PF for different
    (and differently reliable) reasons.
