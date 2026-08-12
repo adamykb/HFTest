@@ -1,5 +1,11 @@
 # Gold (XAUUSD) exploration — preliminary, NOT validated
 
+**Status (2026-08-12):** this is the only result so far, and it's flagged as
+unvalidated below. Active work has moved to
+[`VALIDATION_PLAN.md`](./VALIDATION_PLAN.md) — checking tick quality and
+gold's real spread scale, then three confirmation backtests, before any full
+optimization sweep is built for this pair.
+
 ## What was run
 
 Same file as `EA/tuned-usdjpy-24-5/HF EA - USDJPY 24-5 Tuned.mq5`, no code
