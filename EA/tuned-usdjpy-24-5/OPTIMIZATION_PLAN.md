@@ -132,10 +132,27 @@ Same Strategy Tester settings as before (USDJPY, M1, Every tick based on real
 ticks, $100 deposit) — run these on **2026.07.05–07.11** for consistency with
 everything logged above, not the out-of-sample week.
 
-If Round 2 doesn't decisively cross Profit Factor 1.0, that's a real signal
-this parameter family may be topping out below breakeven — next options at
-that point would be Phase 2 (`MaxDistance`/`MaxTrailing`/`TslTriggerPoints`)
-or revisiting the hour-of-day pattern noticed earlier and set aside.
+### Round 3 results
+
+| # | Delta | Stop | TslPoints | Trades | Win rate | Profit Factor | Net P&L |
+|---|---|---|---|---|---|---|---|
+| **10 (best so far)** | **3.0** | 25 | 20 | 4,309 | 43.4% | **0.975** | -$7.46 |
+| 11 | 3.5 | 25 | 20 | 4,358 | 43.6% | 0.972 ↓ | -$8.32 |
+
+Delta peaked around 3.0 and dipped slightly at 3.5 — same peak-then-reverse
+shape seen on the TslPoints axis, though at 3.5 Delta is now half of
+`MaxDistance` (7), so this dip may be a genuine price-action peak or may be
+an artifact of crowding that headroom — can't fully separate the two without
+also varying MaxDistance. **Current best point: Delta=3.0, Stop=25,
+TslPoints=20, PF=0.975.** Hold here rather than pushing Delta further without
+opening up MaxDistance too.
+
+Still below Profit Factor 1.0 even at the best point across all 11 runs. This
+parameter family (Delta/Stop/TslPoints) is topping out somewhere around
+0.97-0.98 — a real signal to open up Phase 2
+(`MaxDistance`/`MaxTrailing`/`TslTriggerPoints`) or revisit the hour-of-day
+pattern noticed earlier, rather than continuing to fine-tune the same three
+inputs for diminishing returns.
 
 ## A note on the Inputs tab labels
 
