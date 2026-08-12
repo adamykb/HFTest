@@ -57,23 +57,53 @@ relative structure and lengths.
   combinations, small enough for exhaustive coverage rather than the genetic
   approximation
 
+## A note on the Inputs tab labels
+
+MT5 displays each input's trailing `//` comment as its row label in the Inputs
+tab — it **replaces** the variable name, it doesn't add to it. Several inputs
+picked up long descriptive comments during tuning, so their on-screen label is
+no longer the short variable name. Use the "Label shown in Inputs tab" column
+below to find the right row — the code variable name is there for reference
+against `NOTES.md`, but it won't be what you see on screen.
+
 ## Inputs to optimize (Phase 1)
 
-| Input | Start | Step | Stop | Values tested |
+Check the optimize checkbox for exactly these three rows:
+
+| Code variable | Label shown in Inputs tab | Start | Step | Stop |
 |---|---|---|---|---|
-| `Delta` | 0.5 | 0.5 | 2.5 | 0.5, 1.0, 1.5, 2.0, 2.5 |
-| `Stop` | 10 | 5 | 40 | 10, 15, 20, 25, 30, 35, 40 |
-| `TslPoints` | 10 | 5 | 25 | 10, 15, 20, 25 |
+| `Delta` | "ORDER DISTANCE" | 0.5 | 0.5 | 2.5 |
+| `Stop` | "Stop Loss size" | 10 | 5 | 40 |
+| `TslPoints` | "Trailing distance in points (10 points = 1 pip)" | 10 | 5 | 25 |
 
 5 × 7 × 4 = **140 combinations**.
 
 ## Inputs to hold fixed (Phase 1)
 
-Everything else stays at the current tuned defaults: `MaxDistance=7`,
-`MaxTrailing=4`, `TslTriggerPoints=15`, `TrailType=1`, `MaxSpread=18`,
-`Slippage=2`, `StartHour=1`, `EndHour=23`, `AvoidWeekendGap=true`,
-`FridayCutoffHour=21`, `SundayResumeHour=1`, `LotType=0` (fixed lot),
-`FixedLot=0.01`.
+Leave every other row's optimize checkbox **unchecked**, with Value set as below:
+
+| Code variable | Label shown in Inputs tab | Value |
+|---|---|---|
+| `InpMagic` | "Magic Number" | 12345 |
+| `Slippage` | "Widened from 1 for 24/5 volatility variance" | 2 |
+| `StartHour` | "START TRADING HOUR (server time; blocks only the midnight rollover hour)" | 1 |
+| `EndHour` | "END TRADING HOUR (server time)" | 23 |
+| `Secs` | "ORDER MODIFICATIONS (Should be same as TF)" | 60 |
+| `AvoidWeekendGap` | "Block NEW pending orders near weekly open/close" | true |
+| `FridayCutoffHour` | "Server hour (Fri) after which no new orders are placed" | 21 |
+| `SundayResumeHour` | "Server hour (Sun) before which no new orders are placed" | 1 |
+| `LotType` | "Type of Lotsize calculation" | Fixed_Lots |
+| `FixedLot` | "Fixed Lots 0.0 = MM" | 0.01 |
+| `RiskPercent` | "Risk MM%" | 0.0 |
+| `MaxDistance` | "THETA (Max order distance)" | 7.0 |
+| `MaxTrailing` | "COS (Start of Trailing Stop)" | 4.0 |
+| `MaxSpread` | "Max Spread Limit in points (~1.8 pips starting ceiling for USDJ..." | 18 |
+| `TrailType` | "Type of Trailing StopLoss" | Scalp_Trail |
+| `TslTriggerPoints` | "Points in profit before trailing starts (10 points = 1 pip)" | 15 |
+
+Below the "If Trailing by..." groups (`PrvCandleN`, `FMAperiod`, `MA_Mode`,
+`MA_AppPrice`) don't matter this run — `TrailType=Scalp_Trail` means those
+inputs aren't used, leave them at whatever MT5 shows by default.
 
 *(Phase 2, only if Phase 1 doesn't clear the bar: widen the sweep to
 `MaxDistance`, `MaxTrailing`, and `TslTriggerPoints` — hold off on this until
