@@ -57,6 +57,36 @@ relative structure and lengths.
   combinations, small enough for exhaustive coverage rather than the genetic
   approximation
 
+## Optional: quick sanity check before the full sweep
+
+If you want a fast directional read before committing to the full 140-run
+grid, run **one single (non-optimized) backtest** on the in-sample window
+with:
+
+| Input | Value |
+|---|---|
+| `Delta` | 1.5 |
+| `Stop` | 25 |
+| `TslPoints` | 20 |
+
+**This is a reasoned guess, not a validated result** — there's no tick-level
+model behind it, just directional logic: the actual win rate (37.2%) is only
+2.5 points below the breakeven win rate (39.7%) implied by the current
+win/loss size ratio, which suggests a moderate widening is more plausible
+than an extreme one; `Stop=25` gives roughly 2.5x more room before a trade
+gets stopped out by ordinary M1 noise; `TslPoints=20` lets winners run ~2x
+further, raising average win size relative to average loss even if the win
+rate itself doesn't move. It's equally possible this makes Profit Factor
+worse — wider stops can just make losers bigger without a compensating
+win-rate gain.
+
+Use it only as a signpost: if Profit Factor moves meaningfully toward or past
+1.0, that neighborhood of the grid is worth trusting more when the full sweep
+results come in. If it does nothing or makes things worse, that's useful
+information too. Either way, **still run the full 140-combination sweep** —
+one combination out of 140 isn't a reliable basis for a live decision on its
+own.
+
 ## A note on the Inputs tab labels
 
 MT5 displays each input's trailing `//` comment as its row label in the Inputs
