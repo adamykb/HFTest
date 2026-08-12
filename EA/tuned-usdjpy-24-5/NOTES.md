@@ -4,6 +4,12 @@ Base: `EA/original/High Frequency EA v2 - Including new Trailing Stops.mq5`
 (straddle scalper — pending BUY_STOP/SELL_STOP kept close to price, spread-relative
 distances, selectable trailing-stop methods).
 
+**Status (2026-08-12):** first real backtest (`usdjpy.xlsx`, 2026.07.05–07.11, M1,
+defaults below) came back Profit Factor 0.90 — a negative edge, not yet ready for
+live capital. Diagnosis and a walk-forward parameter sweep to fix it are in
+[`OPTIMIZATION_PLAN.md`](./OPTIMIZATION_PLAN.md) — run that before any live/sizing
+work.
+
 ## What changed and why
 
 - **`MaxSpread` 5555 → 18 points.** The original default effectively disabled the
