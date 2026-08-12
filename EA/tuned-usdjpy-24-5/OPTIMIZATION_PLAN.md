@@ -57,35 +57,52 @@ relative structure and lengths.
   combinations, small enough for exhaustive coverage rather than the genetic
   approximation
 
-## Optional: quick sanity check before the full sweep
+## Results logged so far (in-sample window, 2026.07.05–07.11)
 
-If you want a fast directional read before committing to the full 140-run
-grid, run **one single (non-optimized) backtest** on the in-sample window
-with:
+Running a full 140-combination grid by hand isn't practical, so this plan now
+runs as a **manual local sensitivity sweep** instead (next section) — a small,
+targeted set of single backtests around the best point found so far, rather
+than the full grid. The full grid is kept further below as an alternative,
+only worth it if MT5's Optimizer can run all combinations unattended on your
+machine.
 
-| Input | Value |
-|---|---|
-| `Delta` | 1.5 |
-| `Stop` | 25 |
-| `TslPoints` | 20 |
+| Run | Delta | Stop | TslPoints | Trades | Win rate | Breakeven win rate | Profit Factor | Net P&L |
+|---|---|---|---|---|---|---|---|---|
+| Baseline | 0.5 | 10 | 10 | 9,281 | 37.2% | 39.7% | 0.90 | -$43.61 |
+| Run A | 1.0 | 15 | 15 | 6,678 | 43.7% | 45.4% | 0.94 | -$24.94 |
+| **Run B (best so far)** | **1.5** | **25** | **20** | 4,199 | 43.9% | 45.3% | **0.95** | -$15.34 |
 
-**This is a reasoned guess, not a validated result** — there's no tick-level
-model behind it, just directional logic: the actual win rate (37.2%) is only
-2.5 points below the breakeven win rate (39.7%) implied by the current
-win/loss size ratio, which suggests a moderate widening is more plausible
-than an extreme one; `Stop=25` gives roughly 2.5x more room before a trade
-gets stopped out by ordinary M1 noise; `TslPoints=20` lets winners run ~2x
-further, raising average win size relative to average loss even if the win
-rate itself doesn't move. It's equally possible this makes Profit Factor
-worse — wider stops can just make losers bigger without a compensating
-win-rate gain.
+Trend across these three: widening all three together has moved Profit Factor
+and net P&L in the right direction every time, but hasn't crossed 1.0 yet.
+Because Runs A and B moved all three parameters together, we don't yet know
+which one is actually driving the improvement — that's what the sweep below
+is for.
 
-Use it only as a signpost: if Profit Factor moves meaningfully toward or past
-1.0, that neighborhood of the grid is worth trusting more when the full sweep
-results come in. If it does nothing or makes things worse, that's useful
-information too. Either way, **still run the full 140-combination sweep** —
-one combination out of 140 isn't a reliable basis for a live decision on its
-own.
+## Manual local sensitivity sweep (6 runs — do this instead of the full grid)
+
+Each row below changes **exactly one** input away from Run B (the best point
+so far), holding the other two fixed. That isolates each parameter's
+individual effect on Profit Factor, something Runs A and B couldn't show
+since both moved all three at once. Same Strategy Tester settings as before
+(USDJPY, M1, Every tick based on real ticks, $100 deposit, in-sample window
+2026.05.25–07.04), non-optimized single tests — no Optimizer tab needed.
+
+| # | Delta | Stop | TslPoints | Isolates |
+|---|---|---|---|---|
+| 1 | 1.5 | **35** | 20 | Does pushing Stop further keep helping? |
+| 2 | 1.5 | **15** | 20 | Confirms Stop=25 beats pulling back |
+| 3 | 1.5 | 25 | **25** | Does pushing TslPoints further keep helping? |
+| 4 | 1.5 | 25 | **15** | Confirms TslPoints=20 beats pulling back |
+| 5 | **2.0** | 25 | 20 | Does pushing Delta further keep helping? |
+| 6 | **1.0** | 25 | 20 | Confirms Delta=1.5 beats pulling back |
+
+**After these 6 come back**: for each parameter, if the "push further" run
+improved Profit Factor over Run B, that direction gets 1-2 more follow-up
+runs pushing further still (adaptive hill-climbing, converging toward a local
+peak in a couple more rounds). If a "push further" run made things worse,
+that parameter is likely near its local optimum already — stop pushing it.
+This should converge in roughly 2-3 more rounds of a handful of runs each,
+well short of 140 total.
 
 ## A note on the Inputs tab labels
 
@@ -96,7 +113,13 @@ no longer the short variable name. Use the "Label shown in Inputs tab" column
 below to find the right row — the code variable name is there for reference
 against `NOTES.md`, but it won't be what you see on screen.
 
-## Inputs to optimize (Phase 1)
+## Alternative: full grid via MT5 Optimizer (only if it can run unattended)
+
+Skip this section and use the manual sweep above unless MT5's Optimizer tab
+is genuinely usable on your setup to run all combinations in one unattended
+pass — in which case this is more thorough than the manual sweep since it
+also captures interaction effects between the three parameters, not just
+their individual effects.
 
 Check the optimize checkbox for exactly these three rows:
 
@@ -166,8 +189,12 @@ single pass.)*
 
 ## Reporting back
 
-Export the Optimization Results tab to CSV (right-click the results grid →
-"Export to CSV") for each window rather than a screenshot — that lets me re-run
-the same hour-by-hour / breakeven-win-rate style analysis on whatever you bring
-back. Also export the standard Strategy Tester report (like `usdjpy.xlsx`) for
-whichever single parameter set ends up best, for both out-of-sample windows.
+For the manual sweep: export each single-test Strategy Tester report the same
+way as `usdjpy.xlsx`/`usdjpy1.xlsx`/`usdjpy2.xlsx` (the standard report, not a
+screenshot) for each of the 6 runs — that lets me re-run the same
+hour-by-hour / breakeven-win-rate analysis on each one. Once the sweep
+converges on a best point, export the same report for that final parameter
+set on both out-of-sample windows.
+
+If using the full-grid Optimizer instead: export the Optimization Results tab
+to CSV (right-click the results grid → "Export to CSV") for each window.
