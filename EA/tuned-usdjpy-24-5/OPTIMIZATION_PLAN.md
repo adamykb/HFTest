@@ -46,14 +46,16 @@ relative structure and lengths.
 - Symbol: USDJPY
 - Period: M1
 - Model: **Every tick based on real ticks**
-- Deposit: use whatever matches your intended live size for realistic margin/lot
-  behavior (doesn't affect $ P&L at fixed 0.01 lot, but keep it consistent across
-  all runs so results are comparable)
+- Deposit: **$100**, matching the intended live account size — use this for
+  every run (optimization + both out-of-sample validations) so results are
+  comparable. Doesn't change $ P&L at fixed 0.01 lot, but keeps margin/lot
+  behavior representative of the real account.
 - Optimization criterion: **Profit Factor** (if only "Balance/Complex Criterion"
   are offered, use Complex Criterion but manually re-sort the results table by
   Profit Factor afterward — don't trust the default sort alone, see pitfalls below)
-- Algorithm: Genetic (fast) is fine — the grid below is small enough (140
-  combinations) that Complete/Slow is also feasible if you want exhaustive coverage
+- Algorithm: **Slow complete algorithm** — the grid below is only 140
+  combinations, small enough for exhaustive coverage rather than the genetic
+  approximation
 
 ## Inputs to optimize (Phase 1)
 
