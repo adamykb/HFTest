@@ -4,6 +4,68 @@ Running log of notable backtest results and what they mean. Newest entries
 first. See `VALIDATION_PLAN.md` for the checks this is working through, and
 `NOTES.md` for the original preliminary result.
 
+**⚠ Do not run `Delta=30/Stop=250/MaxSpread=50/TslTriggerPoints=100/TslPoints=150`
+with `LotType=0` (Fixed_Lots) on a real account — see the 2026-08-12
+`gold_4.xlsx` entry below. This combination produced a 98.94% drawdown and a
+single trade losing 27% of a $100 account.**
+
+---
+
+## 2026-08-12 — `gold_4.xlsx`: 98.94% drawdown, account nearly wiped out
+
+### Settings
+
+Same as `gold_3.xlsx` below, except `StartHour=1, EndHour=23` (standard
+hours, correctly reset this time). Window still 2026.07.05–07.11, **History
+Quality still 83% real ticks** — the clean 100%-quality week (2026.07.19–07.25)
+still hasn't been used for a full-day gold test.
+
+### Result — the most severe finding in this entire exploration
+
+| Metric | `gold_3` (StartHour=15/EndHour=17) | `gold_4` (StartHour=1/EndHour=23) |
+|---|---|---|
+| Net P&L | +$100.15 | **-$98.37** |
+| Balance Drawdown Maximal | $77.02 (57.56%) | **$152.85 (98.94%)** |
+| Largest single loss | -$22.02 | **-$27.61** |
+| Margin Level | 409.80% | **40.25%** |
+| Profit Factor | 1.248 | 0.890 |
+
+**98.94% drawdown** means the account came within roughly a dollar of zero
+at its worst point. **Margin Level 40.25%** is low enough that most brokers'
+automatic stop-out (commonly triggered somewhere in the 20-50% range) would
+very plausibly have force-liquidated everything at the worst possible moment
+in a live account — not a scary-but-recoverable dip, a real margin-call
+scenario.
+
+### What changed between gold_3 and gold_4, and what that means
+
+The *only* difference is trading hours — narrow 15-17 window vs. the full
+1-23 day, same parameters, same week. That means gold_3's +$100.15 wasn't a
+real edge; it was a narrow window that happened to avoid whatever happened
+during the rest of the day. Full-day exposure reveals the actual risk
+profile, and it's severe.
+
+### The structural cause, independent of week/tick-quality confounds
+
+`LotType=0` (Fixed_Lots) at `0.01` does not scale to account size.
+`Stop=250` (a wide multiplier of live spread) combined with that fixed lot
+produced a single trade that lost $27.61 — over a quarter of a $100
+account, in one trade. No choice of week or trading hours fixes this; the
+position size itself is too large for the account once the stop is this
+wide.
+
+### Required before any further gold testing
+
+**Switch `LotType` from `0` to `1` (Pct_of_Balance) with a conservative
+`RiskPercent`, e.g. 1-2%.** The EA already supports this (`calcLots()`), it
+has just never been enabled in any test run so far (USDJPY or gold). This
+caps a single trade's maximum loss as a percentage of the account by
+design, rather than leaving it to whatever a fixed lot happens to produce
+against whatever the stop distance turns out to be. Parameter sweeping
+should not resume until this is in place — the risk here isn't specific to
+these particular Delta/Stop values, it's inherent to fixed-lot sizing on a
+$100 account with any sufficiently wide stop.
+
 ---
 
 ## 2026-08-12 — `gold_3.xlsx`: +$100.15 net, but with a 57.56% drawdown and a -$22 single trade

@@ -4,9 +4,14 @@
 unvalidated below. Active work has moved to
 [`VALIDATION_PLAN.md`](./VALIDATION_PLAN.md) — checking tick quality and
 gold's real spread scale, then three confirmation backtests, before any full
-optimization sweep is built for this pair. Later, higher-signal results
-(including a run that doubled a $100 account but with a 57%+ drawdown along
-the way) are logged in [`findings.md`](./findings.md) as they come in.
+optimization sweep is built for this pair.
+
+**⚠ Update:** a full-day run of the widened parameters produced a 98.94%
+drawdown (near-total wipeout) and a single trade losing 27% of a $100
+account — see [`findings.md`](./findings.md). Root cause is fixed-lot
+position sizing (`LotType=0`) not scaling to account size; switching to
+risk-based sizing (`LotType=1`, small `RiskPercent`) is required before any
+further gold testing continues.
 
 ## What was run
 
