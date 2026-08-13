@@ -4,6 +4,77 @@ Running log of notable backtest results and what they mean. Newest entries
 first. See `VALIDATION_PLAN.md` for the checks this is working through, and
 `NOTES.md` for the original preliminary result.
 
+**✅ AAHFT v2 (session profit/loss lock): `Pct_of_Balance` confirmed as the
+right sizing choice, `Fixed_Lots` empirically worse.** See the 2026-08-13
+5-day comparison below — `Fixed_Lots 0.05` lost $77-84 on 4 of 5 independent
+days (vs. `Pct_of_Balance`'s mixed/net-positive spread) and breached the
+loss floor twice (a single trade jumping past the threshold before the lock
+could react), while `Pct_of_Balance`'s self-shrinking bet size hit its floor
+cleanly both times it triggered.
+
+---
+
+## 2026-08-13 — AAHFT v2 daily session-lock testing: Pct_of_Balance vs Fixed_Lots
+
+### Setup
+
+5 independent single-day backtests (2026.07.20–07.24, each its own fresh
+$100 run), `AAHFT v2 (Session PL Lock)`, XAUUSD, M1, Every tick based on
+real ticks, 100% real ticks confirmed on every day. Same trade-setting
+parameters throughout (Delta=0.5/Stop=10/MaxDistance=7/MaxTrailing=4/
+MaxSpread=18/TslTriggerPoints=15/TslPoints=20/Slippage=2), `ProfitTargetBalance=1000`.
+Two sizing schemes tested across the same 5 days.
+
+### Pct_of_Balance (RiskPercent=1, MaxLossBalance=50)
+
+| Day | Trades | Peak balance (implied) | Net P&L | Lock triggered? |
+|---|---|---|---|---|
+| Mon 07.20 | 14,433 | ~$333 | +$88.50 | No |
+| Tue 07.21 | 12,604 | ~$520 | **+$351.79** | No |
+| Wed 07.22 | 3,955 | ~$117 | -$50.28 | Yes — loss floor, landed cleanly at ~$49.72 |
+| Thu 07.23 | 17,583 | **~$558** | -$29.51 | No (touched 56% of the way to the $1,000 target, then reversed) |
+| Fri 07.24 | 500 | ~$100 | -$50.22 | Yes — loss floor, fast (500 trades), landed cleanly at ~$49.78 |
+
+Average: +$62/day (small sample, day-to-day swing far exceeds the average —
+not yet trustworthy as a real expectation). Largest single-trade loss any
+day: -$21.87. Profit target (1000) never reached.
+
+### Fixed_Lots 0.05 (MaxLossBalance=20, except Tue where it was disabled)
+
+| Day | Trades | Net P&L | Lock triggered? |
+|---|---|---|---|
+| Mon 07.20 | 353 | **-$83.95** | Yes, but **breached** — ended ~$16, below the $20 floor |
+| Tue 07.21 | 12,551 | +$713.55 | Floor was **disabled** (`MaxLossBalance=0`) this day — not a fair comparison |
+| Wed 07.22 | 141 | -$78.95 | Yes, landed close (~$21) |
+| Thu 07.23 | 3,156 | -$77.25 | No (ended ~$22.75, just above floor) |
+| Fri 07.24 | 124 | **-$82.50** | Yes, but **breached** — ended ~$17.50, below the $20 floor |
+
+4 of 5 days lost $77-84 each — a tight, consistent cluster of heavy losses.
+The floor was breached (ending balance below the intended `MaxLossBalance`)
+on 2 of the 4 days it was active, confirming the lock is **reactive, not
+preventive**: a single large loss (e.g. Monday's -$11.85, over half the
+remaining buffer) can jump straight past the threshold before
+`CheckSessionLock()` gets a chance to act. `Pct_of_Balance`'s self-shrinking
+bet size didn't have this problem — its two floor-hits landed almost exactly
+on the threshold, no overshoot.
+
+### Why: Fixed_Lots doesn't de-risk during a losing streak
+
+`Pct_of_Balance` recalculates position size off *current* balance every
+trade — as losses accumulate, bet size shrinks, cushioning further losses.
+`Fixed_Lots` keeps betting the same size regardless of how much has already
+been lost, so a losing stretch keeps costing the same dollar amount per
+trade all the way down. That's the mechanism behind both the more severe
+losses and the floor breaches above.
+
+### Verdict
+
+**Use `Pct_of_Balance`, not `Fixed_Lots`, going forward.** The pivot to
+fixed lot size was a reasonable hypothesis to test given the "hits the
+floor too fast" observation, but the real data shows the opposite of the
+intended fix — it made losses larger, more consistent, and capable of
+overshooting the safety floor the lock is supposed to enforce.
+
 **⚠ Do not run `Delta=30/Stop=250/MaxSpread=50/TslTriggerPoints=100/TslPoints=150`
 with `LotType=0` (Fixed_Lots) on a real account — see the 2026-08-12
 `gold_4.xlsx` entry below. This combination produced a 98.94% drawdown and a
