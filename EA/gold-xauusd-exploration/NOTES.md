@@ -4,7 +4,9 @@
 unvalidated below. Active work has moved to
 [`VALIDATION_PLAN.md`](./VALIDATION_PLAN.md) — checking tick quality and
 gold's real spread scale, then three confirmation backtests, before any full
-optimization sweep is built for this pair.
+optimization sweep is built for this pair. Later, higher-signal results
+(including a run that doubled a $100 account but with a 57%+ drawdown along
+the way) are logged in [`findings.md`](./findings.md) as they come in.
 
 ## What was run
 
