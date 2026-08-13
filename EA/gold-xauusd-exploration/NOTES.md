@@ -13,6 +13,13 @@ position sizing (`LotType=0`) not scaling to account size; switching to
 risk-based sizing (`LotType=1`, small `RiskPercent`) is required before any
 further gold testing continues.
 
+**⚠ Update 2:** risk-based sizing (`LotType=1`, `RiskPercent=1`) fixes the
+single-trade-too-big problem but exposed a different one — on the original
+small-scale parameters (Delta=3.5/Stop=25/TslPoints=20, Profit Factor
+consistently ~1.0 across two independent tests), compounding position size
+turned a near-zero-edge strategy into a 5x-up-then-crash boom-bust cycle,
+netting -$66.75 on a $100 account. See `G1.xlsx` in `findings.md`.
+
 ## What was run
 
 Same file as `EA/tuned-usdjpy-24-5/HF EA - USDJPY 24-5 Tuned.mq5`, no code

@@ -9,6 +9,68 @@ with `LotType=0` (Fixed_Lots) on a real account — see the 2026-08-12
 `gold_4.xlsx` entry below. This combination produced a 98.94% drawdown and a
 single trade losing 27% of a $100 account.**
 
+**⚠ `LotType=1` (Pct_of_Balance) fixes the single-trade-too-big problem but
+introduces a different risk: compounding position size on a near-zero-edge
+strategy can still produce huge boom-bust swings — see the 2026-08-12
+`G1.xlsx` entry below (peak balance >$537 from a $100 start, then crashed to
+-$66.75 net). Watch for this pattern on every future risk-sized run, not
+just this specific parameter set.**
+
+---
+
+## 2026-08-12 — `G1.xlsx`: near-zero edge confirmed, but compounding turned it into a boom-bust cycle
+
+### Settings
+
+First cleanly controlled run per the rewritten `VALIDATION_PLAN.md`: window
+2026.07.19–07.25 (100% real ticks), StartHour=1/EndHour=23, $100 deposit,
+`LotType=1` (Pct_of_Balance), `RiskPercent=1` — the small-scale parameters
+from the original gold result (Delta=3.5, Stop=25, MaxDistance=7,
+MaxTrailing=4, MaxSpread=18, TslTriggerPoints=15, TslPoints=20, Slippage=2).
+
+### Result
+
+| Metric | Value |
+|---|---|
+| Total Net Profit | **-$66.75** |
+| Balance Drawdown Maximal | **$513.37 (95.53%)** |
+| Implied peak balance | ~$537 (from $100 start) |
+| Profit Factor | 0.993 |
+| Trades | 36,785 |
+| Average hold time | 0:00:17 |
+| Largest single loss | -$7.80 |
+| Margin Level (end) | 150.20% |
+
+### Two things this confirms
+
+1. **Profit Factor is essentially exactly breakeven again** (0.993 here,
+   1.0036 in `gold_2.xlsx` — same Delta/Stop/TslPoints, completely different
+   position-sizing and hours setup in each). Two independent tests
+   converging on "coin flip" is a real signal: these specific parameter
+   values likely have no real edge on gold, positive or negative.
+2. **`RiskPercent`-based sizing does not prevent wild equity swings on a
+   thin edge — it can amplify them.** It fixed the single-trade-too-big
+   problem from `gold_4` (largest loss here: -$7.80, contained relative to
+   how large the balance had grown by then), but because lot size scales
+   with *current* balance, a winning stretch compounds into bigger bets,
+   which then compounds losses just as much when the stretch reverses. The
+   account grew over 5x, then gave almost all of it back, netting a loss —
+   not because of a few catastrophic trades (max losing streak was only
+   -$4.44 across 9 trades) but because of prolonged multi-thousand-trade
+   drift at a constantly-changing position size.
+
+### Why this matters beyond this one test
+
+This is a concrete demonstration of the risk flagged early in the
+conversation about scaling lot size as capital grows: **compounding
+position size only works safely on top of a validated, robustly positive
+edge.** On a near-zero-edge strategy, it doesn't reliably grow an account —
+it turns ordinary drift into much larger swings in both directions. Watch
+for this same boom-bust shape on G2 and G2b, not just this parameter set —
+if it shows up regardless of Delta/Stop/TslPoints, that points to the
+compounding mechanism itself (or the `RiskPercent` value) as the thing to
+address, separate from parameter tuning.
+
 ---
 
 ## 2026-08-12 — `gold_4.xlsx`: 98.94% drawdown, account nearly wiped out
