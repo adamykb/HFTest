@@ -1,6 +1,6 @@
 # Gold (XAUUSD) — Validation Plan
 
-## Where things stand (updated 2026-08-12)
+## Where things stand (updated 2026-08-13)
 
 Four backtests in (`gold.xlsx`, `gold_2.xlsx`, `gold_3.xlsx`, `gold_4.xlsx`
 — full detail in `findings.md`), here's what's actually been established:
