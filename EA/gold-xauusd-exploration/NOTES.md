@@ -1,24 +1,18 @@
-# Gold (XAUUSD) exploration — preliminary, NOT validated
+# Gold (XAUUSD) exploration — CONCLUDED, no validated edge found
 
-**Status (2026-08-12):** this is the only result so far, and it's flagged as
-unvalidated below. Active work has moved to
-[`VALIDATION_PLAN.md`](./VALIDATION_PLAN.md) — checking tick quality and
-gold's real spread scale, then three confirmation backtests, before any full
-optimization sweep is built for this pair.
+**Status (2026-08-13): closed out.** The validation plan's full Step 2 test
+sequence (G1, G2, G2b) is complete — see the summary at the top of
+[`findings.md`](./findings.md). None of the three parameter families tested
+cleared Profit Factor 1.0 under clean, controlled conditions. The original
+1.24 Profit Factor that started this exploration was most likely the
+83%-tick-quality artifact suspected from the start. **Recommendation: don't
+invest further effort in gold with this EA's straddle/scalp mechanics** —
+see `findings.md` for the full reasoning, including a separate, serious
+finding about `RiskPercent`-based compounding turning even a coin-flip edge
+into extreme boom-bust swings (one run touched a ~210x peak before crashing
+to near-total ruin in the same week).
 
-**⚠ Update:** a full-day run of the widened parameters produced a 98.94%
-drawdown (near-total wipeout) and a single trade losing 27% of a $100
-account — see [`findings.md`](./findings.md). Root cause is fixed-lot
-position sizing (`LotType=0`) not scaling to account size; switching to
-risk-based sizing (`LotType=1`, small `RiskPercent`) is required before any
-further gold testing continues.
-
-**⚠ Update 2:** risk-based sizing (`LotType=1`, `RiskPercent=1`) fixes the
-single-trade-too-big problem but exposed a different one — on the original
-small-scale parameters (Delta=3.5/Stop=25/TslPoints=20, Profit Factor
-consistently ~1.0 across two independent tests), compounding position size
-turned a near-zero-edge strategy into a 5x-up-then-crash boom-bust cycle,
-netting -$66.75 on a $100 account. See `G1.xlsx` in `findings.md`.
+History of how this conclusion was reached, below and in `findings.md`:
 
 ## What was run
 

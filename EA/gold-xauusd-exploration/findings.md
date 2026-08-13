@@ -16,6 +16,66 @@ strategy can still produce huge boom-bust swings — see the 2026-08-12
 -$66.75 net). Watch for this pattern on every future risk-sized run, not
 just this specific parameter set.**
 
+**✅ Step 2 of the validation plan is now complete (G1, G2, G2b all run
+2026-08-13). Verdict: no validated edge on gold with any of the three
+parameter families tested, under controlled conditions. See the summary at
+the top of the 2026-08-13 entries below before running further gold tests.**
+
+---
+
+## 2026-08-13 — Step 2 complete: G1, G2, G2b — no validated edge found
+
+### Summary verdict
+
+Three controlled tests (same window 2026.07.19–07.25, 100% real ticks,
+StartHour=1/EndHour=23, $100 deposit, `LotType=1`/`RiskPercent=1`), varying
+only the trade-setting parameters:
+
+| | G1 (small-scale) | G2 (gold-native baseline) | G2b (widened) |
+|---|---|---|---|
+| Delta / Stop | 3.5 / 25 | 0.5 / 10 | 30 / 250 |
+| Trades | 36,785 | 65,358 | 1,005 |
+| Avg hold time | 0:00:17 | 0:00:12 | 0:09:18 |
+| **Profit Factor** | 0.993 | 0.9998 | 0.955 |
+| Peak balance (implied) | ~$537 | **~$20,977** | ~$192 |
+| Final balance | $33.25 | ~$3.89 | $54.74 |
+| Peak drawdown | 95.53% | **99.98%** | 71.45% |
+
+**None of the three cleared Profit Factor 1.0**, let alone the 1.15
+acceptance bar. This closes the validation plan's decision tree: the
+original 1.24 Profit Factor that started this exploration (`NOTES.md`) was
+most likely the 83%-tick-quality artifact suspected from the start — every
+subsequent controlled test landed at or below breakeven.
+
+**Trade frequency correlates directly with how violent the compounding
+swings are.** G2 (fastest, 65,358 trades) produced the most extreme
+boom-bust — a ~210x peak followed by near-total ruin, in the same week. G2b
+(slowest, 1,005 trades) had the mildest swing (71% drawdown — still severe)
+because fewer compounding steps give the process less room to run wild.
+This confirms the `G1` finding generalizes across parameter sets, not just
+one specific combination: `RiskPercent`-based compounding on a near-zero
+edge is dangerous regardless of which Delta/Stop/TslPoints are chosen, and
+gets more dangerous the faster the strategy trades.
+
+### Recommendation
+
+Do not proceed to a full sensitivity sweep for gold on this EA design —
+there's no edge signal here to sweep toward. If gold is revisited later, it
+would need either a fundamentally different entry/exit approach (not just
+different Delta/Stop/TslPoints values on the same straddle-scalp mechanics)
+or a lot more evidence than three losing controlled tests before investing
+further effort.
+
+### Note on G2b's single-trade risk
+
+Largest loss trade was -$30.01 (30% of the original $100), despite
+`RiskPercent=1` intending to cap risk at ~1% of current balance. Even
+risk-based sizing doesn't perfectly bound individual trade losses — slippage,
+gaps, and this EA's straddle mechanics (multiple related positions) can
+still let a single trade exceed the intended risk percentage. Another reason
+not to treat `RiskPercent=1` as a hard ceiling on single-trade risk.
+
+---
 ---
 
 ## 2026-08-12 — `G1.xlsx`: near-zero edge confirmed, but compounding turned it into a boom-bust cycle

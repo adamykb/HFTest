@@ -1,5 +1,15 @@
 # Gold (XAUUSD) — Validation Plan
 
+## ✅ Concluded 2026-08-13 — Step 2 complete, no validated edge
+
+G1, G2, and G2b (the full Step 2 sequence below) are all done. Verdict:
+Profit Factor 0.99, 1.00, and 0.955 respectively — none cleared 1.0, let
+alone the 1.15 acceptance bar, under clean and fully controlled conditions.
+Full breakdown in `findings.md`. Recommendation: don't proceed to a full
+sensitivity sweep for gold on this EA design — there's no edge signal here
+to sweep toward. The rest of this document is kept as a record of how that
+conclusion was reached.
+
 ## Where things stand (updated 2026-08-13)
 
 Four backtests in (`gold.xlsx`, `gold_2.xlsx`, `gold_3.xlsx`, `gold_4.xlsx`
