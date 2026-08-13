@@ -129,8 +129,12 @@ tandem rather than left fixed (this was already earmarked as a Phase 2
 parameter — may end up needed sooner than expected).
 
 Same Strategy Tester settings as before (USDJPY, M1, Every tick based on real
-ticks, $100 deposit) — run these on **2026.07.05–07.11** for consistency with
-everything logged above, not the out-of-sample week.
+ticks) — run these on **2026.07.05–07.11** for consistency with everything
+logged above, not the out-of-sample week.
+
+**Correction:** despite being noted here, Rounds 1-3 were actually all run at
+$100,000 deposit with `Fixed_Lots`, not the real $100 target — same gap that
+was caught and fixed on the gold side. Round 4 below addresses this.
 
 ### Round 3 results
 
@@ -153,6 +157,39 @@ parameter family (Delta/Stop/TslPoints) is topping out somewhere around
 (`MaxDistance`/`MaxTrailing`/`TslTriggerPoints`) or revisit the hour-of-day
 pattern noticed earlier, rather than continuing to fine-tune the same three
 inputs for diminishing returns.
+
+## Round 4 — real-conditions risk check (before any Phase 2 work)
+
+The gold exploration (`EA/gold-xauusd-exploration/`) found that `RiskPercent`-
+based position sizing can turn a near-breakeven edge into a severe boom-bust
+equity swing (one gold test peaked at ~210x the starting balance before
+crashing to near-total ruin in the same week). USDJPY's edge is similarly
+close to breakeven (PF 0.975 at best) and has never actually been tested at
+the real $100 deposit with risk-based sizing — every prior round used
+$100,000 and `Fixed_Lots`. This needs checking before any further parameter
+tuning is worth trusting.
+
+Run the current best point (Round 3 #10) unchanged, except:
+
+| Input | Value |
+|---|---|
+| Deposit | **$100** |
+| `LotType` | **Pct_of_Balance** |
+| `RiskPercent` | **1** |
+| `Delta` / `Stop` / `MaxDistance` / `MaxTrailing` | 3.0 / 25 / 7 / 4 (unchanged) |
+| `MaxSpread` | 18 (unchanged) |
+| `TslTriggerPoints` / `TslPoints` | 15 / 20 (unchanged) |
+
+Window and hours unchanged (2026.07.05–07.11, StartHour=1/EndHour=23).
+
+**What to watch for**: Profit Factor should be roughly similar to 0.975
+(sizing scheme doesn't change the underlying win/loss pattern much), but the
+**path** might look completely different — check Balance Drawdown Maximal
+and the implied peak balance vs. final balance for the same boom-bust shape
+seen on gold. If it shows up here too, that's a general risk of
+`RiskPercent`-based compounding on any near-flat edge, not something
+specific to gold — worth addressing (e.g. a non-compounding, fixed-dollar-
+risk-per-session scheme) before Phase 2 or any live use, on either pair.
 
 ## A note on the Inputs tab labels
 
